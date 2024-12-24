@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Student {
+  id         String              @id @default(cuid())
+  name       String
+  cohortId   String
+  cohort     Cohort              @relation(fields: [cohortId], references: [id])
+  dateJoined DateTime            @default(now())
+  lastLogin  DateTime            @default(now())
+  status     Boolean             @default(true)
+  courses    CoursesOnStudents[]
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@index([cohortId])
+  @@map("students")
+}
+
+model Cohort {
+  id       String    @id @default(cuid())
+  name     String
+  students Student[]
+
+  @@map("cohorts")
+}
+
+model Course {
+  id       String              @id @default(cuid())
+  name     String
+  icon     String
+  students CoursesOnStudents[]
+
+  @@map("courses")
+}
+
+model CoursesOnStudents {
+  id        String  @id @default(cuid())
+  studentId String
+  courseId  String
+  student   Student @relation(fields: [studentId], references: [id])
+  course    Course  @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+  @@map("courses_on_students")
+}
